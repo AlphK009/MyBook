@@ -7,8 +7,8 @@ import Loading from '@/components/Loading';
 import NavBar from '@/components/Nav';
 import Button from '@/components/Button';
 import Link from 'next/link';
-import BookDetail from '@/pages/bookDetail';
 import CardList from '@/components/card/cardList';
+
 
 const BookSearchComponent: React.FC = () => {
   const { register, handleSubmit, formState: { errors },setValue,getValues } = useForm();
@@ -17,7 +17,6 @@ const BookSearchComponent: React.FC = () => {
   const [error, setError] = useState(null);
   const [startIndex, setStartIndex] = useState(0);
   const [viewMode, setViewMode] = useState('grid');
-  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,7 +29,7 @@ const BookSearchComponent: React.FC = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setError('An error occurred while fetching data.');
+        setError(alert("Failed"));
         setLoading(false)
       }
     };
