@@ -2,42 +2,66 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import CardBook from '@/components/card';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import Loading from '@/components/Loading';
 import NavBar from '@/components/Nav';
 import Button from '@/components/Button';
 import Link from 'next/link';
-import CardList from '@/components/card/cardList';
+import BookList from '@/components/card/bookList';
 
+interface Book {
+  id: string;
+  volumeInfo: {
+    title: string;
+    authors: string[];
+    publishedDate: string;
+    imageLinks: {
+      thumbnail: string;
+    };
+    publisher: string;
+  };
+}
 
-const BookSearchComponent: React.FC = () => {
-  const { register, handleSubmit, formState: { errors },setValue,getValues } = useForm();
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [startIndex, setStartIndex] = useState(0);
-  const [viewMode, setViewMode] = useState('grid');
+interface BookSearchFormData {
+  title: string;
+}
+
+interface BookSearchProps {}
+
+const BookSearchComponent: React.FC<BookSearchProps> = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    getValues,
+  } = useForm<BookSearchFormData>();
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [startIndex, setStartIndex] = useState<number>(0);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     const fetchData = async () => {
       const apiUrl = `https://www.googleapis.com/books/v1/volumes?q=search+terms&startIndex=${startIndex}`;
       try {
-        setLoading(true)
+        setLoading(true);
         setError(null);
         const response = await axios.get(apiUrl);
         setBooks(response.data.items);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setError(alert("Failed"));
-        setLoading(false)
+        setError('Failed');
+        setLoading(false);
       }
     };
 
     fetchData();
   }, [startIndex]);
 
-  const onSubmit = async (data) => {
+  const onSubmit: SubmitHandler<BookSearchFormData> = async (data) => {
     try {
       setLoading(true);
       const response = await axios.get(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(data.title)}`);
@@ -48,19 +72,22 @@ const BookSearchComponent: React.FC = () => {
       setLoading(false);
     }
   };
-  const sortBooks = (field) => {
-    const sortedBooks = [...books];
-    sortedBooks.sort((a, b) => {
-      if (field === 'title') {
-        return a.volumeInfo.title.localeCompare(b.volumeInfo.title);
-      } else if (field === 'publishDate') {
-        const dateA = a.volumeInfo.publishedDate || '0000-01-01';
-        const dateB = b.volumeInfo.publishedDate || '0000-01-01';
-        return dateA.localeCompare(dateB);
-      }
-    });
-    setBooks(sortedBooks);
-  };
+
+ const sortBooks = (field: 'title' | 'publishDate') => {
+  const sortedBooks = [...books];
+  sortedBooks.sort((a: Book, b: Book) => {
+    if (field === 'title') {
+      return a.volumeInfo.title.localeCompare(b.volumeInfo.title);
+    } else if (field === 'publishDate') {
+      const dateA = a.volumeInfo.publishedDate || '0000-01-01';
+      const dateB = b.volumeInfo.publishedDate || '0000-01-01';
+      return dateA.localeCompare(dateB);
+    }
+    return 0;
+  });
+  setBooks(sortedBooks);
+};
+
   const goToPreviousPage = () => {
     if (startIndex >= 10) {
       setStartIndex(startIndex - 10);
@@ -102,25 +129,25 @@ const BookSearchComponent: React.FC = () => {
       {loading?(<Loading/>): (
          <div className="bg-white">   
         {books.map ((book)=> {
-          <Link to={`/books/${book.id}`} key={book.id}></Link>
+          // <Link to={`/books/${book.id}`} key={book.id}></Link>
           return (
             viewMode === 'grid'?(
               <CardBook
               href={`/books/${book.id}`}
               width={320}
               height={270}
-              key={book.id}
+              id={book.id}
               url={book.volumeInfo.imageLinks && book.volumeInfo.imageLinks.thumbnail}
               Alt={book.volumeInfo.publisher} 
               title={book.volumeInfo.title} 
               writer={book.volumeInfo.authors ? book.volumeInfo.authors.join(', ') : 'Tidak ada informasi penulis'}
               years={book.volumeInfo.publishedDate}
               />
-              ):(<CardList
+              ):(<BookList
                 href={`/books/${book.id}`}
                 width={320}
                 height={270}
-                key={book.id}
+                id={book.id}
                 url={book.volumeInfo.imageLinks && book.volumeInfo.imageLinks.thumbnail}
                 Alt={book.volumeInfo.publisher} 
                 title={book.volumeInfo.title} 
